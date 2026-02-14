@@ -1,0 +1,126 @@
+name: Smoke Tests
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  smoke-test:
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        project: [go-genai, py-genai, node-genai, rust-genai]
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Compose
+        uses: docker/setup-compose-action@v1.2.0
+        with:
+          version: v2.40.3
+
+      - name: Install Docker Model Plugin
+        run: |
+          # Add Docker's official GPG key
+          sudo apt-get update
+          sudo apt-get install ca-certificates curl
+          sudo install -m 0755 -d /etc/apt/keyrings
+          sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+          sudo chmod a+r /etc/apt/keyrings/docker.asc
+
+          # Add the repository to Apt sources
+          echo \
+            "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
+            $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
+            sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+          sudo apt-get update
+
+          # Install docker-model-plugin
+          sudo apt-get install -y docker-model-plugin
+
+          # Verify installation
+          if sudo docker model version; then
+            echo "Docker Model Plugin installed successfully"
+          else
+            echo "Failed to install Docker Model Plugin"
+            exit 1
+          fi
+          
+      - name: Build project
+        working-directory: ./${{ matrix.project }}
+        run: |
+          docker compose build
+
+      - name: Start services and run smoke tests
+        working-directory: ./${{ matrix.project }}
+        run: |
+          # Start services in detached mode
+          docker compose up -d
+          
+          # Get the port for this project
+          case "${{ matrix.project }}" in
+            "go-genai") PORT=8080 ;;
+            "py-genai") PORT=8081 ;;
+            "node-genai") PORT=8082 ;;
+            "rust-genai") PORT=8083 ;;
+          esac
+          
+          # Wait for service to be healthy
+          echo "Waiting for service on port $PORT to be healthy..."
+          timeout 120s bash -c 'until curl -f http://localhost:'$PORT'/health; do 
+            echo "Service not ready yet, waiting..."
+            sleep 5
+          done'
+          
+          echo "Service is healthy, starting smoke tests..."
+          
+          # Test main page
+          echo "Testing main page..."
+          curl -f http://localhost:$PORT/ || (echo "Main page failed" && exit 1)
+          
+          # Test chat API with actual model interaction
+          echo "Testing chat API with model..."
+          RESPONSE=$(curl -s -X POST http://localhost:$PORT/api/chat \
+            -H "Content-Type: application/json" \
+            -d '{"message": "Hello"}' \
+            --max-time 30)
+          if [[ -n "$RESPONSE" ]] && jq -e '.response' <<< "$RESPONSE" > /dev/null 2>&1; then
+            echo "✅ Chat API test passed"
+            echo "Response: $(jq -r '.response' <<< "$RESPONSE" | head -c 200)..."
+          else
+            echo "❌ Chat API test failed - empty response, invalid JSON, or missing 'response' key"
+            echo "Raw response: $RESPONSE"
+            exit 1
+          fi
+          
+          # Test model info endpoint
+          echo "Testing model info..."
+          MODEL_INFO=$(curl -s -X POST http://localhost:$PORT/api/chat \
+            -H "Content-Type: application/json" \
+            -d '{"message": "!modelinfo"}' \
+            --max-time 10)
+          if [[ -n "$MODEL_INFO" ]] && jq -e '.model' <<< "$MODEL_INFO" > /dev/null 2>&1; then
+            echo "✅ Model info test passed"
+            echo "Model: $(jq -r '.model' <<< "$MODEL_INFO")"
+          else
+            echo "❌ Model info test failed - empty response, invalid JSON, or missing 'model' key"
+            echo "Raw response: $MODEL_INFO"
+            exit 1
+          fi
+          
+          echo "✅ Smoke tests completed for ${{ matrix.project }}"
+
+      - name: Check logs on failure
+        if: failure()
+        working-directory: ./${{ matrix.project }}
+        run: |
+          echo "=== Docker Compose Logs ==="
+          docker compose logs
+          echo "=== Container Status ==="
+          docker compose ps
+
+
