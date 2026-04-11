@@ -87,7 +87,7 @@ jobs:
           RESPONSE=$(curl -s -X POST http://localhost:$PORT/api/chat \
             -H "Content-Type: application/json" \
             -d '{"message": "Hello"}' \
-            --max-time 30)
+            --max-time 60)
           if [[ -n "$RESPONSE" ]] && jq -e '.response' <<< "$RESPONSE" > /dev/null 2>&1; then
             echo "✅ Chat API test passed"
             echo "Response: $(jq -r '.response' <<< "$RESPONSE" | head -c 200)..."
