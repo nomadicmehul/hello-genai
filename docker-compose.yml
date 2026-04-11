@@ -2,4 +2,4 @@ include:
   - go-genai/docker-compose.yml
   - py-genai/docker-compose.yml
   - node-genai/docker-compose.yml
-  - rust-genai/docker-compose.yaml
+  - rust-genai/docker-compose.yml

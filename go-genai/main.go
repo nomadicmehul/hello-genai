@@ -269,11 +269,6 @@ func main() {
 	// Main route
 	router.HandleFunc("/", handleIndex).Methods("GET")
 	
-	// Debug route
-	router.HandleFunc("/debug", func(w http.ResponseWriter, r *http.Request) {
-		http.ServeFile(w, r, "./templates/debug.html")
-	}).Methods("GET")
-	
 	// Simple text endpoint for basic testing
 	router.HandleFunc("/ping", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/plain")

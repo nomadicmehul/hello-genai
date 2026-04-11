@@ -1,0 +1,20 @@
+# Git
+.git
+.gitignore
+
+# Dependencies
+node_modules
+npm-debug.log
+
+# macOS specific
+.DS_Store
+
+# Local development settings
+.env
+
+# IDE directories
+.idea/
+.vscode/
+
+# Tests
+test_static.js

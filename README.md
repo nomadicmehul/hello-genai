@@ -1,15 +1,15 @@
 # hello-genai
 
-A simple chatbot web application built in Go, Python and Node.js that connects to a local LLM service (llama.cpp) to provide AI-powered responses.
+A simple chatbot web application built in Go, Python, Node.js, and Rust that connects to a local LLM service to provide AI-powered responses.
 
 ## Environment Variables
 
-The application uses the following environment variables defined in the `.env` file:
+The application uses the following environment variables (injected by Docker Model Runner):
 
-- `LLM_BASE_URL`: The base URL of the LLM API
-- `LLM_MODEL_NAME`: The model name to use
+- `LLAMA_URL`: The base URL of the LLM API
+- `LLAMA_MODEL`: The model name to use
 
-To change these settings, simply edit the `.env` file in the root directory of the project.
+These are automatically configured when using Docker Compose with the `models` directive.
 
 ## Quick Start
 
@@ -30,16 +30,13 @@ To change these settings, simply edit the `.env` file in the root directory of t
 
    http://localhost:8081 for the GenAI Application in Python
 
-   http://localhost:8082 for the GenAI Application in Node
+   http://localhost:8082 for the GenAI Application in Node.js
 
    http://localhost:8083 for the GenAI Application in Rust
 
 ## Requirements
 
 - macOS (recent version)
-- Either:
-  - Docker and Docker Compose (preferred)
-  - Go 1.21 or later
-- Local LLM server
+- Docker and Docker Compose
 
-If you're using a different LLM server configuration, you may need to modify the`.env` file.
+See `.env.example` for sample environment variable configuration.

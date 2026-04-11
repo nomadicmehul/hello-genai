@@ -1,5 +1,16 @@
 .idea
+.DS_Store
+
 # Rust
 rust-genai/target/
 rust-genai/**/*.rs.bk
-.DS_Store
+
+# Node.js
+node-genai/node_modules/
+
+# Python
+py-genai/__pycache__/
+py-genai/venv/
+
+# Environment
+*.env.local

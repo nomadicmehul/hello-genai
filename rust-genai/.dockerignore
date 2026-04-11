@@ -1,0 +1,16 @@
+# Git
+.git
+.gitignore
+
+# Build artifacts
+target/
+
+# macOS specific
+.DS_Store
+
+# Local development settings
+.env
+
+# IDE directories
+.idea/
+.vscode/

@@ -11,7 +11,7 @@ pub struct AppConfig {
 
 impl AppConfig {
     pub fn from_env() -> Self {
-        let port = env::var("PORT").unwrap_or_else(|_| "8083".to_string()).parse().unwrap_or(8083);
+        let port = env::var("PORT").unwrap_or_else(|_| "8080".to_string()).parse().unwrap_or(8080);
         
         // Check for Docker Model Runner variables first, then fallback to legacy
         let llm_base_url = env::var("LLAMA_URL")
